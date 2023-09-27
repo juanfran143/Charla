@@ -7,7 +7,7 @@ def executioner(names: str) -> None:
 
 """
 if __name__ == '__main__':
-    names = ["Vero", "Peyman", "Elnaz", "Yuda", "Xavi"]
+    names = ["Vero", "Peyman", "Elnaz", "Yuda", "Xabier"]
     executioner(names)
 """
 
@@ -22,6 +22,6 @@ def executioner(names: str) -> None:
 if __name__ == '__main__':
     root = tk.Tk()
     root.withdraw()  # Oculta la ventana principal de tkinter
-    names = ["Vero", "Peyman", "Elnaz", "Yuda", "Xavi"]
+    names = ["Vero", "Peyman", "Elnaz", "Yuda", "Xabier"]
     executioner(names)
 
