@@ -1,4 +1,6 @@
-#https://codeforces.com/problemset/problem/1703/G
+# https://codeforces.com/problemset/problem/1703/G
+
+
 class tree:
     def __init__(self, method, capa, chest, key_cost, pather=None):
         self.method = method
@@ -20,6 +22,7 @@ class tree:
             saldo = saldo - key_cost + chest[self.capa]
 
         return saldo
+
 
 def algo(chest, key_cost):
     lim_old = [tree(1, 0, chest, key_cost), tree(0, 0, chest, key_cost)]

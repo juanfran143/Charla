@@ -10,12 +10,6 @@ class Node:
     def distance(self, node_x):
         return ((node_x.x - self.x) ** 2 + (node_x.y - self.y) ** 2) ** (1 / 2)
 
-    def __str__(self):
-        return str(self.id)
-
-    def __repr__(self):
-        return self.__str__()
-
 
 class Edge:
     def __init__(self, node_x: Node, node_y: Node):
@@ -33,10 +27,11 @@ class Edge:
         return self.__str__()
 
 
+
 class Instance:
     def __init__(self, num_nodes):
-        self.nodes = [Node(i, random.random()*10, random.random()*10) for i in range(num_nodes)]
-        self.edges = self.generate_edges()
+        self.nodes = [Node(i+1, random.random()*10, random.random()*10) for i in range(num_nodes)]
+        self.edges = self.generate_edges_ii()
         # self.edges
 
     def generate_edges(self):
