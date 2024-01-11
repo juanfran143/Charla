@@ -1,12 +1,54 @@
 from Day1.TSP.Objects import *
 import random
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 class Solution:
     def __init__(self, instance):
         self.instance = instance
         self.solution = {"Route": [], "Distance": 0}
+
+    def run_random(self, verbose=False, plot=False):
+        print("")
+        print("Random")
+        self.__build_random_solution()
+        self.__print_solution(verbose)
+        self.__plot_solution(plot)
+        random_algo = self.solution["Distance"]
+        return random_algo
+
+    def run_heuristic(self, verbose=False, plot=False):
+        print("Heuristic")
+        self.__build_closest_neightboor()
+        self.__print_solution(verbose)
+        self.__plot_solution(plot)
+        heuristic_algo = self.solution["Distance"]
+
+        return heuristic_algo
+
+    def run_bias(self, verbose=False, plot=False):
+        import copy
+        self.__build_closest_neightboor(bias=False)
+        self.__plot_solution(plot, "Heuristic (vs bias)")
+        route = copy.copy(self.solution["Route"])
+        distance = self.solution["Distance"]
+
+        print(f"Huerístico: {distance}")
+        for i in range(500):
+            self.__build_closest_neightboor(bias=True)
+            if distance > self.solution["Distance"]:
+                distance = self.solution["Distance"]
+                route = copy.copy(self.solution["Route"])
+
+        print(f"Bias: {distance}")
+        self.solution["Distance"] = distance
+        self.solution["Route"] = route
+
+        self.__print_solution(verbose)
+        self.__plot_solution(plot, name="Bias")
+        heuristic_algo = self.solution["Distance"]
+
+        return heuristic_algo
 
     def run(self, verbose=False, plot=False):
         print("")
@@ -23,6 +65,17 @@ class Solution:
         heuristic_algo = self.solution["Distance"]
 
         return random_algo, heuristic_algo
+
+    def run_greedy_with_ls(self, verbose=False, plot=False, local_search=True):
+        print("Heuristic")
+        self.__build_closest_neightboor()
+        self.__print_solution(verbose)
+        self.__plot_solution(plot, name="Heuristic")
+        if local_search:
+            print("Local search")
+            self.__local_search_same_route()
+            self.__print_solution(verbose)
+            self.__plot_solution(plot, name="LS")
 
     def __plot_solution(self, plot, name="solution"):
         if plot:
@@ -46,7 +99,6 @@ class Solution:
             plt.savefig(name+".png")
             plt.grid(True)
             plt.show()
-
 
     def __print_solution(self, verbose):
         if verbose:
@@ -74,13 +126,17 @@ class Solution:
     def __select_edge_greedy(self, sorted_edges):
         return sorted_edges[0]
 
+    def __select_edge_bias(self, sorted_edges):
+        select = int((np.log(np.random.random()) / np.log(1 - 0.7))) % len(sorted_edges)
+        return sorted_edges[select]
+
     def __get_possible_edges(self, node_id):
         route = self.solution["Route"]
         aux_1 = [i[1] for i in self.instance.edges.items() if i[0][0] == node_id and i[0][1] not in route]
         aux_2 = [i[1] for i in self.instance.edges.items() if i[0][1] == node_id and i[0][0] not in route]
         return aux_1 + aux_2
 
-    def __build_closest_neightboor(self):
+    def __build_closest_neightboor(self, bias=False):
         nodes = self.instance.nodes
 
         self.solution["Route"] = []
@@ -95,6 +151,8 @@ class Solution:
             sorted_edges = sorted(possible_edges, key=lambda x: x.distance)
 
             selected_edge = self.__select_edge_greedy(sorted_edges)
+            if bias:
+                selected_edge = self.__select_edge_bias(sorted_edges)
 
             if selected_edge.node_x.id in route and selected_edge.node_y.id in route:
                 sorted_edges.remove(selected_edge)
@@ -151,40 +209,99 @@ class Solution:
 
         self.solution["Route"] = route
 
-    def run_greedy_with_ls(self, verbose=False, plot=False, local_search=True):
-        print("Heuristic")
-        self.__build_closest_neightboor()
-        self.__print_solution(verbose)
-        self.__plot_solution(plot, name="Heuristic")
-        if local_search:
-            print("Local search")
-            self.__local_search_same_route()
-            self.__print_solution(verbose)
-            self.__plot_solution(plot, name="LS")
 
+def choose_option(option):
+    if option == 1:
+        inst = Instance(5)
+        sol = Solution(inst)
+        sol.run_random(verbose=True, plot=True)
 
-if __name__ == '__main__':
+    if option == 2:
+        inst = Instance(5)
+        sol = Solution(inst)
+        sol.run_heuristic(verbose=True, plot=True)
 
-    random_sol = []
-    heuristic_sol = []
-    for _ in range(1):
-        inst = Instance(80)
+    if option == 3:
+        inst = Instance(5)
+        sol = Solution(inst)
+        sol.run(verbose=True, plot=True)
+
+    if option == 4:
+        flag = True
+        import random
+        i = 0
+        while flag:
+            random.seed(i)
+            inst = Instance(5)
+            sol = Solution(inst)
+            random_solution, heuristic = sol.run(verbose=False, plot=False)
+            i += 1
+            if random_solution+0.01 < heuristic:
+                flag = False
+                i -= 1
+
+        print(f"Se han ejecutado {i} instancias")
+        random.seed(i)
+        inst = Instance(5)
+        sol = Solution(inst)
+        sol.run(verbose=True, plot=True)
+
+    if option == 5:
+        random_sol = []
+        heuristic_sol = []
+        for _ in range(100):
+            inst = Instance(5)
+            sol = Solution(inst)
+            random_algo, heuristic_algo = sol.run(verbose=True)
+            random_sol.append(random_algo)
+            heuristic_sol.append(heuristic_algo)
+
+        plt.figure(figsize=(8, 6))
+        plt.boxplot([heuristic_sol, random_sol], labels=['Heuristic Solution', 'Random Solution'])
+        plt.title('Boxplot de Soluciones Heurísticas y Aleatorias para instancias de 5 nodos')
+        plt.ylabel('Valor')
+        plt.xlabel('Tipo de Solución')
+        plt.grid(True)
+        plt.show()
+
+    if option == 6:
+        random_sol = []
+        heuristic_sol = []
+        for _ in range(100):
+            inst = Instance(50)
+            sol = Solution(inst)
+            random_algo, heuristic_algo = sol.run(verbose=True)
+            random_sol.append(random_algo)
+            heuristic_sol.append(heuristic_algo)
+
+        plt.figure(figsize=(8, 6))
+        plt.boxplot([heuristic_sol, random_sol], labels=['Heuristic Solution', 'Random Solution'])
+        plt.title('Boxplot de Soluciones Heurísticas y Aleatorias para instancias de 50 nodos')
+        plt.ylabel('Valor')
+        plt.xlabel('Tipo de Solución')
+        plt.grid(True)
+        plt.show()
+
+    if option == 7:
+        inst = Instance(70)
+        sol = Solution(inst)
+        sol.run_random(verbose=True, plot=True)
+
+    if option == 8:
+        inst = Instance(70)
+        sol = Solution(inst)
+        sol.run_heuristic(verbose=True, plot=True)
+
+    if option == 9:
+        inst = Instance(30)
+        sol = Solution(inst)
+        sol.run_bias(verbose=True, plot=True)
+
+    if option == 10:
+        inst = Instance(70)
         sol = Solution(inst)
         sol.run_greedy_with_ls(verbose=True, plot=True, local_search=True)
 
-    """
-    for _ in range(5):
-        inst = Instance(5)
-        sol = Solution(inst)
-        random_algo, heuristic_algo = sol.run_greedy_with_ls(verbose=True)
-        random_sol.append(random_algo)
-        heuristic_sol.append(heuristic_algo)
-    
-    plt.figure(figsize=(8, 6))
-    plt.boxplot([heuristic_sol, random_sol], labels=['Heuristic Solution', 'Random Solution'])
-    plt.title('Boxplot de Soluciones Heurísticas y Aleatorias')
-    plt.ylabel('Valor')
-    plt.xlabel('Tipo de Solución')
-    plt.grid(True)
-    plt.show()
-    """
+
+if __name__ == '__main__':
+    choose_option(9)
